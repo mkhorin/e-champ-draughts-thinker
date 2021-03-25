@@ -1,0 +1,13 @@
+{
+  "name": "e-champ-draughts-thinker",
+  "version": "1.0.0",
+  "description": "Thinking bot for playing E-Champ Draughts",
+  "author": "Maxim Khorin",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mkhorin/e-champ-draughts-thinker.git"
+  },
+  "dependencies": {
+  }
+}
