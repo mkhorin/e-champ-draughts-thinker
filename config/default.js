@@ -9,7 +9,7 @@ module.exports = {
 
     label: 'Thinker',
     params: {
-        depth: [1, 2, 3],
+        depth: [1, 2],
         solver: 'DraughtsThinkerSolver',
         values: {
             coronation: 4,

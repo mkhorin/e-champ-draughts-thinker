@@ -18,6 +18,26 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
 
     clear () {
         this.done = null;
+        this.workers?.forEach(worker => worker.clear());
+    }
+
+    resolveMove (done) {
+        this.done = done;
+        if (this.play.ways.count() === 1) {
+            return this.complete(0);
+        }
+        this.maxDepth = this.getMaxDepth();
+        this.values = this.getBaseValues();
+        this.board = this.getBoardData();
+        this.createWorkers(this.onMoveDone.bind(this));
+    }
+
+    resolveDraw (done) {
+        this.done = done;
+        this.maxDepth = this.getMaxDepth();
+        this.values = this.getBaseValues();
+        this.board = this.getBoardData();
+        this.createWorkers(this.onDrawDone.bind(this));
     }
 
     getBaseValues () {
@@ -41,151 +61,124 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
             : this.params.depth;
     }
 
-    resolveMove (done) {
-        this.done = done;
-        if (this.play.ways.count() === 1) {
-            return this.complete(0);
-        }
-        this.values = this.getBaseValues();
-        this.maxDepth = this.getMaxDepth();
-        this.board = new Club.DraughtsThinkerSolverBoard(this);
-        this.kings = this.board.kings;
-        this.ways = new Club.DraughtsThinkerSolverWays(this);
-        let ways = null, best = null;
-        for (const source of this.play.ways) {
-            const way = this.createWayFromSource(source);
-            const value = this.resolveWayValue(way, 1);
-            if (best === null || value > best) {
-                best = value;
-                ways = [way];
-            } else if (value === best) {
-                ways.push(way);
+    getBoardData () {
+        const data = this.play.board.serialize();
+        const cells = data.cells;
+        const pieces = {
+            [Club.Draughts.DARK]: [],
+            [Club.Draughts.LIGHT]: []
+        };
+        const kings = {
+            [Club.Draughts.DARK]: 0,
+            [Club.Draughts.LIGHT]: 0
+        };
+        for (const piece of data.pieces) {
+            if (piece.crowned) {
+                piece.value = this.values.king;
+                ++kings[piece.color];
+            } else {
+                piece.value = this.values.man;
             }
+            pieces[piece.color].push(piece);
         }
-        const index = Jam.Helper.getRandom(0, ways.length - 1);
-        this.complete(ways[index].index);
+        return {cells, pieces, kings};
     }
 
-    resolveWayValue (way, depth, callback) {
-        this.makeMove(way);
-        let ways = this.ways.resolve(way.piece.color === Club.Draughts.LIGHT
-            ? Club.Draughts.DARK
-            : Club.Draughts.LIGHT);
+    createWorkers (done) {
+        this.workers = [];
+        for (const way of this.play.ways) {
+            const worker = new Club.DraughtsThinkerSolverWorker(this);
+            worker.start(this.serializeWay(way), done);
+            this.workers.push(worker);
+        }
+    }
+
+    isActiveWorker () {
+        for (const worker of this.workers) {
+            if (!worker.finished) {
+                return true;
+            }
+        }
+    }
+
+    onDrawDone (worker) {
+        if (!this.isActiveWorker()) {
+            const value = this.getBestWorkerValue();
+            const kings = this.board.kings[this.player.getOppositeColor()];
+            this.complete(value > 0 || (value === 0 && kings > 0));
+        }
+    }
+
+    getBestWorkerValue () {
         let best = null;
-        for (const way of ways) {
-            const value = depth < this.maxDepth
-                ? this.resolveWayValue(way, depth + 1)
-                : way.value;
-            if (best === null || value > best) {
-                best = value;
+        for (const worker of this.workers) {
+            if (best === null || worker.value > best) {
+                best = worker.value;
             }
         }
-        this.cancelMove(way);
-        if (best === null) {
-            return this.values.win + this.values.depth * depth;
-        }
-        return way.value - best;
+        return best;
     }
 
-    createWayFromSource (source) {
+    onMoveDone (worker) {
+        if (!this.isActiveWorker()) {
+            this.complete(this.getBestWorkerIndex());
+        }
+    }
+
+    getBestWorkerIndex () {
+        let indexes = [], best = null;
+        for (let i = 0; i < this.workers.length; ++i) {
+            let {value} = this.workers[i];
+            if (best === null || value > best) {
+                best = value;
+                indexes = [i];
+            } else if (value === best) {
+                indexes.push(i);
+            }
+        }
+        return Jam.ArrayHelper.getRandom(indexes);
+    }
+
+    serializeWay (way) {
         let value = 0;
         let capturedKings = 0;
         let capturedKing = null;
-        let piece = this.board.getPieceByPos(source.piece.cell.pos);
+        let pos = way.piece.cell.pos;
+        let piece = this.board.cells[pos.x]?.[pos.y]?.piece;
         let points = [];
-        let index = source.index;
-        for (let {cell, crowned, capture} of source.points) {
+        for (let {cell, crowned, capture} of way.points) {
             points.push({
-                cell: this.board.getCell(cell.pos.x, cell.pos.y),
+                cell: this.board.cells[cell.pos.x]?.[cell.pos.y],
                 crowned: crowned,
-                capture: capture && this.board.getPieceByPos(capture.cell.pos)
+                capture: capture && this.board.cells[capture.cell.pos.x]?.[capture.cell.pos.y]?.piece
             });
             if (!capture) {
                 continue;
             }
             if (capture.crowned) {
                 capturedKing = capture;
-                capturedKings++;
+                ++capturedKings;
             } else {
                 value += this.values.man;
             }
         }
         if (capturedKing) {
             value += this.values.king * capturedKings;
-            if (capturedKings === this.kings[capturedKing.color]) {
+            if (capturedKings === this.board.kings[capturedKing.color]) {
                 value += this.values.firstKing;
             }
         }
         if (points[points.length - 1].crowned !== piece.crowned) {
             value += this.values.coronation;
-            if (this.kings[piece.color] === 0) {
+            if (this.board.kings[piece.color] === 0) {
                 value += this.values.firstKing;
             }
         }
-        return {value, piece, points, index};
+        return {value, piece, points};
     }
 
-    makeMove ({piece, points}) {
-        for (const {capture} of points) {
-            if (capture) {
-                capture.removed = true;
-                capture.cell.piece = null;
-                if (capture.crowned) {
-                    this.kings[capture.color]--;
-                }
-            }
-        }
-        const target = points[points.length - 1];
-        piece.cell.piece = null;
-        piece.cell = target.cell;
-        if (piece.crowned !== target.crowned) {
-            this.kings[piece.color]++;
-        }
-        piece.crowned = target.crowned;
-        target.cell.piece = piece;
-    }
-
-    cancelMove ({piece, points}) {
-        for (const {capture} of points) {
-            if (capture) {
-                capture.removed = false;
-                capture.cell.piece = capture;
-                if (capture.crowned) {
-                    this.kings[capture.color]++;
-                }
-            }
-        }
-        const target = points[0];
-        piece.cell.piece = null;
-        piece.cell = target.cell;
-        if (piece.crowned !== target.crowned) {
-            this.kings[piece.color]--;
-        }
-        piece.crowned = target.crowned;
-        piece.cell.piece = piece;
-    }
-
-    resolveDraw (done) {
-        this.done = done;
-        this.values = this.getBaseValues();
-        this.maxDepth = this.getMaxDepth();
-        this.board = new Club.DraughtsThinkerSolverBoard(this);
-        this.kings = this.board.kings;
-        this.ways = new Club.DraughtsThinkerSolverWays(this);
-        let best = null;
-        for (const source of this.play.ways) {
-            const way = this.createWayFromSource(source);
-            const value = this.resolveWayValue(way, 1);
-            if (best === null || value > best) {
-                best = value;
-            }
-        }
-        const kings = this.kings[this.player.getOppositeColor()];
-        this.complete(best > 0 || (best === 0 && kings > 0));
-    }
-
-    complete (result) {
+    complete (index) {
         const delay = this.constructor.FINAL_DELAY - (Date.now() - this.startTime);
-        return setTimeout(() => this.done?.(result), delay);
+        return setTimeout(() => this.done?.(index), delay);
     }
 };

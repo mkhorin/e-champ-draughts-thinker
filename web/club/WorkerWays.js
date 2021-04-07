@@ -1,27 +1,31 @@
 /**
  * @copyright Copyright (c)2021 Maxim Khorin <maksimovichu@gmail.com>
  */
-Club.DraughtsThinkerSolverWays = class DraughtsThinkerSolverWays {
+class DraughtsThinkerWorkerWays {
 
     static DARK_FORWARD_STEPS = [[1, -1], [-1, -1]];
     static LIGHT_FORWARD_STEPS = [[1, 1], [-1, 1]];
     static STEPS = [[1, -1], [-1, -1], [1, 1], [-1, 1]];
 
     constructor (solver) {
-        this.board = solver.board;
-        this.values = solver.values;
+        this.solver = solver;
+        this.coronation = solver.values.coronation;
+    }
+
+    getCell (x, y) {
+        return this.solver.cells[x]?.[y]
     }
 
     resolve (color) {
         this.color = color;
-        if (color === Club.Draughts.LIGHT) {
-            this.crownY = this.board.size - 1;
+        if (color === DraughtsThinkerWorkerSolver.LIGHT) {
+            this.crownY = this.solver.cells.length - 1;
             this.forwardSteps = this.constructor.LIGHT_FORWARD_STEPS;
         } else {
             this.crownY = 0;
             this.forwardSteps = this.constructor.DARK_FORWARD_STEPS;
         }
-        this.pieces = this.board.pieces[color];
+        this.pieces = this.solver.pieces[color];
         this.ways = [];
         this.resolveCaptures();
         if (!this.ways.length) {
@@ -65,7 +69,7 @@ Club.DraughtsThinkerSolverWays = class DraughtsThinkerSolverWays {
             let nextCapture = false;
             let points = [];
             while (true) {
-                cell = this.board.getCell(x += dx, y += dy);
+                cell = this.getCell(x += dx, y += dy);
                 if (!cell || cell.piece) {
                     break;
                 }
@@ -103,7 +107,7 @@ Club.DraughtsThinkerSolverWays = class DraughtsThinkerSolverWays {
         let x = cell.x;
         let y = cell.y;
         do {
-            cell = this.board.getCell(x += dx, y += dy);
+            cell = this.getCell(x += dx, y += dy);
         } while (cell && !cell.piece);
         return cell?.piece;
     }
@@ -114,18 +118,18 @@ Club.DraughtsThinkerSolverWays = class DraughtsThinkerSolverWays {
         for (let [dx, dy] of this.constructor.STEPS) {
             let x = point.cell.x + dx;
             let y = point.cell.y + dy;
-            let piece = this.board.getCell(x, y)?.piece;
+            let piece = this.getCell(x, y)?.piece;
             if (!piece || piece.color === this.color || piece.captured) {
                 continue;
             }
-            let cell = this.board.getCell(x += dx, y += dy);
+            let cell = this.getCell(x += dx, y += dy);
             if (!cell || cell.piece) {
                 continue;
             }
             if (y === this.crownY) {
-                this.way.value += this.values.coronation;
+                this.way.value += this.coronation;
                 this.resolveNextCapture(cell, true, piece);
-                this.way.value -= this.values.coronation;
+                this.way.value -= this.coronation;
             } else {
                 this.resolveNextCapture(cell, false, piece);
             }
@@ -178,7 +182,7 @@ Club.DraughtsThinkerSolverWays = class DraughtsThinkerSolverWays {
             let y = piece.cell.y;
             let cell = null;
             while (true) {
-                cell = this.board.getCell(x += dx, y += dy);
+                cell = this.getCell(x += dx, y += dy);
                 if (!cell || cell.piece) {
                     break;
                 }
@@ -195,7 +199,7 @@ Club.DraughtsThinkerSolverWays = class DraughtsThinkerSolverWays {
         for (let [dx, dy] of this.forwardSteps) {
             let x = this.way.piece.cell.x + dx;
             let y = this.way.piece.cell.y + dy;
-            let cell = this.board.getCell(x, y);
+            let cell = this.getCell(x, y);
             if (!cell || cell.piece) {
                 continue;
             }
@@ -203,7 +207,7 @@ Club.DraughtsThinkerSolverWays = class DraughtsThinkerSolverWays {
             this.ways.push({
                 piece: this.way.piece,
                 points: [this.way.points[0], {crowned, cell}],
-                value: crowned ? this.values.coronation : 0
+                value: crowned ? this.coronation : 0
             });
         }
     }
