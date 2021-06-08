@@ -12,8 +12,7 @@ module.exports = {
             'club/SolverWorker.js'
         ],
         target: 'vendor/thinker.min.js',
-        copyright: `/* @copyright Copyright (c) 2021 Maxim Khorin <maksimovichu@gmail.com> */\n`,
-        logging: true
+        copyright: `/* @copyright Copyright (c) 2021 Maxim Khorin <maksimovichu@gmail.com> */\n`
     }, {
         Class: 'Packer',
         sources: [
@@ -21,7 +20,6 @@ module.exports = {
             'club/WorkerWays.js'
         ],
         target: 'vendor/thinker-worker.min.js',
-        copyright: `/* @copyright Copyright (c) 2021 Maxim Khorin <maksimovichu@gmail.com> */\n`,
-        logging: true
+        copyright: `/* @copyright Copyright (c) 2021 Maxim Khorin <maksimovichu@gmail.com> */\n`
     }]
 };

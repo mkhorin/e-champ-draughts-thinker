@@ -57,7 +57,7 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
 
     getMaxDepth () {
         return Array.isArray(this.params.depth)
-            ? Jam.ArrayHelper.getRandom(this.params.depth)
+            ? Jam.ArrayHelper.random(this.params.depth)
             : this.params.depth;
     }
 
@@ -136,7 +136,7 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
                 indexes.push(i);
             }
         }
-        return Jam.ArrayHelper.getRandom(indexes);
+        return Jam.ArrayHelper.random(indexes);
     }
 
     serializeWay (way) {
