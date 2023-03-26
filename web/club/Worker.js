@@ -27,9 +27,10 @@ class DraughtsThinkerWorkerSolver {
 
     resolveWayValue (way, depth, adjacentBestValue, parentWayValue) {
         this.makeMove(way);
-        let ways = this.ways.resolve(way.piece.color === this.constructor.LIGHT
+        let color = way.piece.color === this.constructor.LIGHT
             ? this.constructor.DARK
-            : this.constructor.LIGHT);
+            : this.constructor.LIGHT;
+        let ways = this.ways.resolve(color);
         let best;
         for (let i = 0; i < ways.length; ++i) {
             let value = depth < this.maxDepth
@@ -38,8 +39,10 @@ class DraughtsThinkerWorkerSolver {
             value = way.value - value;
             if (best === undefined || value < best) {
                 best = value;
-                if (adjacentBestValue !== undefined && parentWayValue - best >= adjacentBestValue) {
-                    break; // alpha-beta pruning
+                if (adjacentBestValue !== undefined) {
+                    if (parentWayValue - best >= adjacentBestValue) {
+                        break; // alpha-beta pruning
+                    }
                 }
             }
         }

@@ -88,7 +88,8 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
         this.workers = [];
         for (const way of this.play.ways) {
             const worker = new Club.DraughtsThinkerSolverWorker(this);
-            worker.start(this.serializeWay(way), done);
+            const data = this.serializeWay(way);
+            worker.start(data, done);
             this.workers.push(worker);
         }
     }
@@ -104,7 +105,8 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
     onDrawDone (worker) {
         if (!this.isActiveWorker()) {
             const value = this.getBestWorkerValue();
-            const kings = this.board.kings[this.player.getOppositeColor()];
+            const color = this.player.getOppositeColor();
+            const kings = this.board.kings[color];
             this.complete(value > 0 || (value === 0 && kings > 0));
         }
     }
@@ -121,7 +123,8 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
 
     onMoveDone (worker) {
         if (!this.isActiveWorker()) {
-            this.complete(this.getBestWorkerIndex());
+            const index = this.getBestWorkerIndex();
+            this.complete(index);
         }
     }
 

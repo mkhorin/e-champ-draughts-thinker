@@ -1,8 +1,11 @@
 {
   "name": "e-champ-draughts-thinker",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Thinking bot for playing E-Champ Draughts",
-  "author": "Maxim Khorin",
+  "author": {
+    "name": "Maxim Khorin",
+    "email": "maksimovichu@gmail.com"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
