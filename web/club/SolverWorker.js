@@ -17,6 +17,7 @@ Club.DraughtsThinkerSolverWorker = class DraughtsThinkerSolverWorker {
             maxDepth: this.solver.maxDepth,
             values: this.solver.values,
             way: way,
+            options: this.solver.play.options,
             ...this.solver.board
         });
     }

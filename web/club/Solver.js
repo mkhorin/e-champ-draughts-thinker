@@ -181,7 +181,8 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
     }
 
     complete (index) {
-        const delay = this.constructor.FINAL_DELAY - (Date.now() - this.startTime);
+        const elapsed = Date.now() - this.startTime;
+        const delay = this.constructor.FINAL_DELAY - elapsed;
         return setTimeout(() => this.done?.(index), delay);
     }
 };

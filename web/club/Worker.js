@@ -20,6 +20,7 @@ class DraughtsThinkerWorkerSolver {
         this.kings = data.kings;
         this.maxDepth = data.maxDepth;
         this.pieces = data.pieces;
+        this.options = data.options;
         this.values = data.values;
         this.ways = new DraughtsThinkerWorkerWays(this);
         this.moveCounter = 0;

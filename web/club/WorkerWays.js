@@ -10,6 +10,8 @@ class DraughtsThinkerWorkerWays {
     constructor (solver) {
         this.solver = solver;
         this.coronation = solver.values.coronation;
+        this.backCapture = solver.options.backCapture;
+        this.optionalCapture = solver.options.optionalCapture;
     }
 
     getCell (x, y) {
@@ -28,7 +30,7 @@ class DraughtsThinkerWorkerWays {
         this.pieces = this.solver.pieces[color];
         this.ways = [];
         this.resolveCaptures();
-        if (!this.ways.length) {
+        if (this.optionalCapture || !this.ways.length) {
             this.resolveMoves();
         }
         return this.ways;
@@ -115,6 +117,7 @@ class DraughtsThinkerWorkerWays {
     resolveManCaptures () {
         let captured = false;
         let point = this.way.points[this.way.points.length - 1];
+        let steps = this.backCapture ? this.constructor.STEPS : this.forwardSteps;
         for (let [dx, dy] of this.constructor.STEPS) {
             let x = point.cell.x + dx;
             let y = point.cell.y + dy;
