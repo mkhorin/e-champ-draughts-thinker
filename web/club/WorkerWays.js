@@ -66,8 +66,7 @@ class DraughtsThinkerWorkerWays {
             piece.captured = true;
             this.way.value += piece.value;
             let cell = null;
-            let x = piece.cell.x;
-            let y = piece.cell.y;
+            let {x, y} = piece.cell;
             let nextCapture = false;
             let points = [];
             while (true) {
@@ -106,8 +105,7 @@ class DraughtsThinkerWorkerWays {
     }
 
     getClosestPiece (cell, dx, dy) {
-        let x = cell.x;
-        let y = cell.y;
+        let {x, y} = cell;
         do {
             cell = this.getCell(x += dx, y += dy);
         } while (cell && !cell.piece);
@@ -179,10 +177,9 @@ class DraughtsThinkerWorkerWays {
     }
 
     resolveKingMoves () {
-        const piece = this.way.piece;
+        const {piece} = this.way;
         for (const [dx, dy] of this.constructor.STEPS) {
-            let x = piece.cell.x;
-            let y = piece.cell.y;
+            let {x, y} = piece.cell;
             let cell = null;
             while (true) {
                 cell = this.getCell(x += dx, y += dy);

@@ -63,7 +63,7 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
 
     getBoardData () {
         const data = this.play.board.serialize();
-        const cells = data.cells;
+        const {cells} = data;
         const pieces = {
             [Club.Draughts.DARK]: [],
             [Club.Draughts.LIGHT]: []
@@ -146,7 +146,7 @@ Club.DraughtsThinkerSolver = class DraughtsThinkerSolver {
         let value = 0;
         let capturedKings = 0;
         let capturedKing = null;
-        let pos = way.piece.cell.pos;
+        let {pos} = way.piece.cell;
         let piece = this.board.cells[pos.x]?.[pos.y]?.piece;
         let points = [];
         for (let {cell, crowned, capture} of way.points) {
